@@ -1,0 +1,32 @@
+services:
+  caddy:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: caddy
+    restart: unless-stopped
+    env_file: 
+      - .env
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CF_API_KEY}
+      - CLOUDFLARE_EMAIL=${CF_EMAIL}
+      - ACME_AGREE=true
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    # Uncomment the following line to expose the Caddy admin interface on port 2019
+    # "2019:2019"
+    volumes:
+      #This is the Caddyfile used for configuring the webserver
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      #Location to save static files and mounting it into the Caddy container
+      - ./index.html:/srv/index.html
+      #Mounts the Caddy data and config directories to persist data
+      - ./caddy_data:/data
+      - ./caddy_config:/config
+      #Saves access and erros log to file on disk.
+      #No need to use this really. In my case I need to save the logs to a file outside the container
+      - ./caddy_logs:/var/log/caddy/caddy_logs.log

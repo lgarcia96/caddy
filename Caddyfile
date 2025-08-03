@@ -1,0 +1,65 @@
+(common) {
+    #Common log settings for all sites.
+    #No need to use this really. In my case I need to save the logs to a file outside the container
+    log {
+        #Choose appropriate log level DEBUG, INFO, WARN, ERROR 
+        level DEBUG
+        output file /var/log/caddy/caddy_logs.log {
+            roll_size 100mb
+            roll_keep 5
+            roll_keep_for 720h
+            roll_local_time
+        }
+    }
+
+    #Set tls settings. Use Cloudflare DNS for automatic TLS certificate management. Replace with your API key
+    tls {
+        dns cloudflare {env.CF_API_KEY}
+        resolvers 1.1.1.1
+        protocols tls1.2 tls1.3
+        ciphers  TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+    }
+
+    #Some common security headers
+    header {
+        #disable FLoC tracking
+        Permissions-Policy interest-cohort=()
+        #enable HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        #disable clients from sniffing the media type
+        X-Content-Type-Options nosniff
+        # clickjacking protection
+        X-Frame-Options DENY
+        #Remove Server info
+        -Server
+    }
+}
+
+#Example to serve static files from a directory. Can be a base domain or subdomain
+example.com {
+    #imports common settings set above
+    import common
+
+    handle {
+        #Make sure to set the root directory to where your static files are located.
+        #Rememeber to mount the directory with your site files to /srv in the docker-compose.yml file
+        root * /srv
+        file_server
+    }
+}
+
+#Example showing how to reverse proxy. Can be a base domain or subdomain
+subdomain.example.com {
+    #imports common settings set above
+    import common
+
+    handle /* {
+        reverse_proxy https://IP:Port {
+            transport http {
+                tls
+                #Skip TLS verification for self-signed certificates
+                tls_insecure_skip_verify
+            }
+        }
+    }
+}
