@@ -12,7 +12,7 @@
         }
     }
 
-    #Set tls settings. Use Cloudflare DNS for automatic TLS certificate management. Replace with your API key
+    #Set tls settings. Use Cloudflare DNS for automatic TLS certificate management. Set your API key in the .env file
     tls {
         dns cloudflare {env.CF_API_KEY}
         resolvers 1.1.1.1
